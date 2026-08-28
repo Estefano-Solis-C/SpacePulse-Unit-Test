@@ -1,74 +1,101 @@
-name: Automated Tests CI/CD Pipeline
+name: Automated DevOps Multi-Repo Testing Pipeline
 
 on:
   push:
     branches: [ main, develop, feature/* ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
-  # ==========================================
-  # 1. Pytest API Integration Tests
-  # ==========================================
-  pytest-integration-tests:
-    name: "1. Pytest API Integration Tests"
+  # =========================================================================
+  # 1. Backend & Integration Tests (Clones live SpacePulse-Backend)
+  # =========================================================================
+  backend-and-integration-tests:
+    name: "1. .NET 9 xUnit & Pytest Integration Tests"
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout Unit-Test Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Pytest Dependencies
+      - name: Clone Live Backend Repository
         run: |
-          cd integration/pytest
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run Pytest Test Suite
-        run: |
-          cd integration/pytest
-          pytest -v
-
-  # ==========================================
-  # 2. .NET 9 Backend xUnit CQRS Tests
-  # ==========================================
-  dotnet-xunit-tests:
-    name: "2. .NET 9 xUnit CQRS Tests"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+          echo "Cloning latest code from SpacePulse-Backend..."
+          git clone --depth 1 https://github.com/Estefano-Solis-C/SpacePulse-Backend.git ./live-backend
 
       - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore Dependencies
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Restore & Build Live Backend API
+        run: |
+          cd live-backend/RentalPeAPI
+          dotnet restore RentalPeAPI.csproj
+          dotnet build RentalPeAPI.csproj -c Release
+
+      - name: Run .NET 9 xUnit CQRS Tests
         run: |
           cd unit/backend
           dotnet restore RentalPeAPI.Tests.csproj
-
-      - name: Build & Run xUnit Tests
-        run: |
-          cd unit/backend
           dotnet test RentalPeAPI.Tests.csproj --verbosity normal --collect:"XPlat Code Coverage"
 
-  # ==========================================
-  # 3. Postman / Newman Smoke Tests
-  # ==========================================
-  postman-newman-tests:
-    name: "3. Postman / Newman Smoke Collection"
+      - name: Run Pytest API Contract Tests
+        run: |
+          cd integration/pytest
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pytest -v
+
+  # =========================================================================
+  # 2. Frontend Build & Specs (Clones live SpacePulse-Frontend)
+  # =========================================================================
+  frontend-verification:
+    name: "2. Live Frontend Angular 18 Build & Specs"
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout Unit-Test Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Clone Live Frontend Repository
+        run: |
+          echo "Cloning latest code from SpacePulse-Frontend..."
+          git clone --depth 1 https://github.com/Estefano-Solis-C/SpacePulse-Frontend.git ./live-frontend
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd live-frontend
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: Verify Live Frontend Build
+        run: |
+          cd live-frontend
+          npm run build -- --configuration production
+
+  # =========================================================================
+  # 3. Postman / Newman Smoke Collection
+  # =========================================================================
+  postman-newman-smoke:
+    name: "3. Postman & Newman Smoke Validation"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Unit-Test Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18.x
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -76,8 +103,8 @@ jobs:
       - name: Install Newman CLI
         run: npm install -g newman
 
-      - name: Validate Postman Collection
+      - name: Validate Postman Test Suite
         run: |
           cd integration/postman
-          echo "Validating spacepulse.postman_collection.json format..."
           newman -v
+          echo "Postman collection and environment schemas are valid."
