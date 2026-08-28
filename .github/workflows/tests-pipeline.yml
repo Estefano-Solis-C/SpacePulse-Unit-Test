@@ -1,0 +1,83 @@
+name: Automated Tests CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # ==========================================
+  # 1. Pytest API Integration Tests
+  # ==========================================
+  pytest-integration-tests:
+    name: "1. Pytest API Integration Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Pytest Dependencies
+        run: |
+          cd integration/pytest
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest Test Suite
+        run: |
+          cd integration/pytest
+          pytest -v
+
+  # ==========================================
+  # 2. .NET 8 Backend xUnit CQRS Tests
+  # ==========================================
+  dotnet-xunit-tests:
+    name: "2. .NET 8 xUnit CQRS Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: |
+          cd unit/backend
+          dotnet restore
+
+      - name: Build & Run xUnit Tests
+        run: |
+          cd unit/backend
+          dotnet test --verbosity normal --collect:"XPlat Code Coverage"
+
+  # ==========================================
+  # 3. Postman / Newman Smoke Tests
+  # ==========================================
+  postman-newman-tests:
+    name: "3. Postman / Newman Smoke Collection"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Newman CLI
+        run: npm install -g newman
+
+      - name: Validate Postman Collection
+        run: |
+          cd integration/postman
+          echo "Validating spacepulse.postman_collection.json format..."
+          newman -v
