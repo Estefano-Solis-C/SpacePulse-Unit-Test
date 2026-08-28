@@ -34,29 +34,29 @@ jobs:
           pytest -v
 
   # ==========================================
-  # 2. .NET 8 Backend xUnit CQRS Tests
+  # 2. .NET 9 Backend xUnit CQRS Tests
   # ==========================================
   dotnet-xunit-tests:
-    name: "2. .NET 8 xUnit CQRS Tests"
+    name: "2. .NET 9 xUnit CQRS Tests"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8 SDK
+      - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Restore Dependencies
         run: |
           cd unit/backend
-          dotnet restore
+          dotnet restore RentalPeAPI.Tests.csproj
 
       - name: Build & Run xUnit Tests
         run: |
           cd unit/backend
-          dotnet test --verbosity normal --collect:"XPlat Code Coverage"
+          dotnet test RentalPeAPI.Tests.csproj --verbosity normal --collect:"XPlat Code Coverage"
 
   # ==========================================
   # 3. Postman / Newman Smoke Tests
