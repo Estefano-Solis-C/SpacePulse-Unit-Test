@@ -1,0 +1,65 @@
+{
+  "info": {
+    "name": "SpacePulse (RentalPe) Automated API Suite",
+    "description": "Comprehensive Postman & Newman regression collection for SpacePulse CQRS Web API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "IAM / Users",
+      "item": [
+        {
+          "name": "Login Homeowner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "var json = pm.response.json();",
+                  "pm.environment.set('authToken', json.token);",
+                  "pm.environment.set('userId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@spacepulse.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "{{authUrl}}/users/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Spaces",
+      "item": [
+        {
+          "name": "List All Spaces",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/space"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monitoring & IoT",
+      "item": [
+        {
+          "name": "Get User Telemetry Readings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/monitoring/readings/user"
+          }
+        }
+      ]
+    }
+  ]
+}

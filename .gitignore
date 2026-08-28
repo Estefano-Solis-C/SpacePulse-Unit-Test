@@ -1,0 +1,37 @@
+# ==========================================
+# SpacePulse UNIT-TEST .gitignore (Multi-Tier)
+# ==========================================
+
+# Python & Pytest
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.env
+venv/
+.venv/
+env/
+ENV/
+
+# .NET test results
+[Bb]in/
+[Oo]bj/
+TestResults/
+*.trx
+
+# Node & Jasmine
+node_modules/
+/coverage
+
+# Postman / Newman run outputs
+newman/
+*.report.html
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
