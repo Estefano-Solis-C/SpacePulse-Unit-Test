@@ -22,14 +22,3 @@ dotnet test
 cd devops
 .\test-runner.ps1 -Target all
 ```
-
-## Subir a GitHub
-
-```bash
-git init
-git add .
-git commit -m "feat: initial commit unit-test"
-git branch -M main
-git remote add origin <URL_DEL_REPO_UNIT_TEST>
-git push -u origin main
-```
