@@ -87,6 +87,8 @@ namespace RentalPeAPI.Monitoring.Application.Internal.CommandServices
         string Type,
         string Name,
         string SerialNumber,
+        string? CustomMetricName,
+        string? CustomUnit,
         decimal? CustomMinThreshold,
         decimal? CustomMaxThreshold
     );
@@ -123,10 +125,10 @@ namespace RentalPeAPI.Monitoring.Application.Internal.CommandServices
                 command.Type,
                 command.Name,
                 command.SerialNumber,
-                "Metric",
-                "Unit",
-                command.CustomMinThreshold ?? 0m,
-                command.CustomMaxThreshold ?? 100m
+                command.CustomMetricName ?? "Temperature",
+                command.CustomUnit ?? "°C",
+                command.CustomMinThreshold ?? 18m,
+                command.CustomMaxThreshold ?? 26m
             );
             await _deviceRepo.AddAsync(device);
             await _unitOfWork.CompleteAsync();
